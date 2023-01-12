@@ -3,8 +3,13 @@ const express = require("express"); // Importation de la librairie express
 const auth = require("basic-auth");
 const mongo = require("mongodb");
 const mongoClient = mongo.MongoClient;
+const cors = require("cors");
+const bodyParser = require("body-parser");
 //console.log(mongo);
 const app = express();  // Instanciation du serveur Web (express)
+
+app.use(cors());
+app.use(bodyParser.json());
 
 // Création d'un middleware (appelé sur l'authentification des routes en PUT, POST et DELETE)
 function authBasic(req, res, next){
@@ -24,7 +29,7 @@ app.post("*", authBasic);
 app.delete("*", authBasic);
 
 
-app.get("/", function(req, res){
+app.get("/biere", function(req, res){
     //https://www.mongodb.com/docs/drivers/node/current/
     mongoClient.connect("mongodb://127.0.0.1:27017", (err, db)=>{
         if(err){
@@ -38,8 +43,49 @@ app.get("/", function(req, res){
         })
     })
 
-    //chaine += "<h1> le monde (page accueil)</h1>";
-    //res.send(chaine);
+})
+
+
+app.get("/biere/:id_biere", function(req, res){
+    //https://www.mongodb.com/docs/drivers/node/current/
+    mongoClient.connect("mongodb://127.0.0.1:27017", (err, db)=>{
+        if(err){
+            res.send("Erreur de connection");
+            throw err;
+        }
+        let database = db.db("biero");
+        let collection = database.collection("produit");
+        let id_biere = req.params.id_biere;
+        
+        
+        
+        collection.findOne({_id : new mongo.ObjectId(id_biere)}, (err, resultat)=>{
+            res.json(resultat);
+        });
+    })
+
+})
+
+
+app.put("/biere", function(req, res){
+    //https://www.mongodb.com/docs/drivers/node/current/
+    mongoClient.connect("mongodb://127.0.0.1:27017", (err, db)=>{
+        if(err){
+            res.send("Erreur de connection");
+            throw err;
+        }
+        let database = db.db("biero");
+        let collection = database.collection("produit");
+        let unProduit = req.body;
+        unProduit.date_ajout = new Date();
+        unProduit.commentaires = [];
+
+        collection.insertOne(unProduit, (err, db)=>{
+            res.json({ok : true});
+        })
+
+    })
+
 })
 
 // Route /toto
